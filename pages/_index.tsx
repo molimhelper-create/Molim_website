@@ -121,9 +121,6 @@ const HomePage: React.FC = () => {
         {/* Why Choose Us Section */}
         <Section variant="light">
           <div className={styles.whyChooseHeader}>
-            <div className={styles.whyChooseTitleWrap}>
-              <h2 className={styles.sectionTitle}>لماذا تختارنا؟</h2>
-            </div>
             <div className={styles.orderCtaWrap}>
               <Link to="/product" className={styles.orderCta} aria-label="اطلب الآن">
                 <span className={styles.orderCtaIcon} aria-hidden>
@@ -131,6 +128,10 @@ const HomePage: React.FC = () => {
                 </span>
                 <span className={styles.orderCtaText}>اطلب الآن</span>
               </Link>
+            </div>
+
+            <div className={styles.whyChooseTitleWrap}>
+              <h2 className={styles.sectionTitle}>لماذا تختارنا؟</h2>
             </div>
           </div>
           <div className={styles.featuresGrid}>
