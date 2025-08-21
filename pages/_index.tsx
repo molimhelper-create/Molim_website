@@ -120,7 +120,17 @@ const HomePage: React.FC = () => {
 
         {/* Why Choose Us Section */}
         <Section variant="light">
-          <h2 className={styles.sectionTitle}>لماذا تختارنا؟</h2>
+          <div className={styles.whyChooseHeader}>
+            <div className={styles.whyChooseTitleWrap}>
+              <h2 className={styles.sectionTitle}>لماذا تختارنا؟</h2>
+            </div>
+            <div className={styles.orderCtaWrap}>
+              <Link to="/product" className={styles.orderCta} aria-label="اطلب الآن">
+                <span className={styles.orderCtaIcon} aria-hidden>+</span>
+                <span className={styles.orderCtaText}>اطلب الآن</span>
+              </Link>
+            </div>
+          </div>
           <div className={styles.featuresGrid}>
             {features.map((feature, index) => (
               <Card key={index} className={styles.featureCard}>
