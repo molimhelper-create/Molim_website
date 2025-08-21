@@ -1,0 +1,27 @@
+.section {
+  width: 100%;
+  padding: var(--spacing-16) 0;
+  transition: background-color var(--animation-duration-normal) ease, color var(--animation-duration-normal) ease;
+}
+
+.dark {
+  background-color: var(--section-dark-bg);
+  color: var(--section-dark-fg);
+}
+
+.light {
+  background-color: var(--section-light-bg);
+  color: var(--section-light-fg);
+}
+
+.contentWrapper {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--spacing-6);
+}
+
+@media (min-width: 768px) {
+  .section {
+    padding: var(--spacing-16) 0;
+  }
+}
