@@ -27,14 +27,31 @@
         <label for="customerEmail">البريد الإلكتروني</label>
         <input id="customerEmail" name="customerEmail" type="email" required />
 
-        <label for="itemIds">معرفات العناصر (سطر لكل معرف)</label>
-        <textarea id="itemIds" name="itemIds" rows="4" placeholder="مثال: base-device" required></textarea>
+  <label for="itemIds">معرفات العناصر (مفصولة بفواصل أو سطر لكل معرف)</label>
+  <textarea id="itemIds" name="itemIds" rows="4" placeholder="مثال: base-device, addon-ir-thermometer" required></textarea>
+  <input type="hidden" id="itemIds_readable" name="itemIds_readable" />
 
         <label for="notes">ملاحظات إضافية (اختياري)</label>
         <textarea id="notes" name="notes" rows="3" placeholder="ملاحظات حول الطلب"></textarea>
 
         <button type="submit">إرسال الطلب</button>
       </form>
+
+      <script>
+        // Ensure itemIds_readable is populated as a comma-separated string on submit
+        (function(){
+          var form = document.querySelector('form[name="send-order"]');
+          if (!form) return;
+          form.addEventListener('submit', function(){
+            var ta = document.getElementById('itemIds');
+            var out = document.getElementById('itemIds_readable');
+            if (!ta || !out) return;
+            // Convert newlines to commas and normalize spacing
+            var v = ta.value.split(/\r?\n/).map(function(s){ return s.trim(); }).filter(Boolean).join(', ');
+            out.value = v;
+          });
+        })();
+      </script>
 
       <p style="margin-top:1rem;color:#666">ملاحظة: هذه طريقة Netlify-Only بدون أي كود خادمي أو جافاسكربت إضافي. بعد النشر انسخ الطلبات من Dashboard → Forms.</p>
     </div>

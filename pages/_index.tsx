@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { Button } from "../components/Button";
 import { Section } from "../components/Section";
 import { Card } from "../components/Card";
-import { Award, Target, Zap, ShieldCheck, HeartPulse, Users, ShoppingCart } from "lucide-react";
+import { Award, Target, Zap, ShieldCheck, HeartPulse, Users } from "lucide-react";
 import styles from "./_index.module.css";
 
 const HomePage: React.FC = () => {
@@ -115,25 +115,24 @@ const HomePage: React.FC = () => {
                 className={styles.designImage}
               />
             </div>
+
+            {/* Order Now CTA placed under the image as the last element of Integration Section */}
+            <div className={styles.orderSectionSky}>
+              <div className={styles.whyChooseHeader}>
+                <div className={styles.orderCtaWrap}>
+                  <a className={styles.orderCta} href="/product#order">
+                    <span className={styles.orderCtaIcon}>🛒</span>
+                    <span className={styles.orderCtaText}>اطلب الآن</span>
+                  </a>
+                </div>
+                <div className={styles.whyChooseTitleWrap} />
+              </div>
+            </div>
           </div>
         </Section>
 
         {/* Why Choose Us Section */}
         <Section variant="light">
-          <div className={styles.whyChooseHeader}>
-            <div className={styles.orderCtaWrap}>
-              <Link to="/product" className={styles.orderCta} aria-label="اطلب الآن">
-                <span className={styles.orderCtaIcon} aria-hidden>
-                  <ShoppingCart size={16} />
-                </span>
-                <span className={styles.orderCtaText}>اطلب الآن</span>
-              </Link>
-            </div>
-
-            <div className={styles.whyChooseTitleWrap}>
-              <h2 className={styles.sectionTitle}>لماذا تختارنا؟</h2>
-            </div>
-          </div>
           <div className={styles.featuresGrid}>
             {features.map((feature, index) => (
               <Card key={index} className={styles.featureCard}>

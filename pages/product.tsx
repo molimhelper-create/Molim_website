@@ -180,10 +180,11 @@ const ShoppingSection: React.FC = () => {
                 />
               </div>
 
-              {/* Render hidden inputs for each item in the cart so Netlify captures them */}
-              {items.map((it) => (
-                <input key={it.id} type="hidden" name="itemIds" value={it.id} />
-              ))}
+
+              {/* Submit a single, human-readable list of item IDs so Netlify shows a plain string */}
+              <input type="hidden" name="itemIds" value={items.map((it) => it.id).join(', ')} />
+              {/* Also include an explicit readable field for CSV exports */}
+              <input type="hidden" name="itemIds_readable" value={items.map((it) => it.id).join(', ')} />
 
               <Button
                 type="submit"
@@ -200,7 +201,7 @@ const ShoppingSection: React.FC = () => {
               <input type="hidden" name="form-name" value="send-order" />
               <input type="text" name="bot-field" />
               <input type="email" name="customerEmail" />
-              {/* itemIds can be repeated inputs; Netlify will capture multiple values */}
+              {/* Provide a single readable itemIds field (comma-separated) for static detection */}
               <input type="text" name="itemIds" />
             </form>
 
