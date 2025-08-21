@@ -39,11 +39,26 @@ async function sendEmail({ to, from, replyTo, subject, html }) {
     })(),
     auth: { user: process.env.SMTP_USERNAME, pass: process.env.SMTP_PASSWORD }
   });
-
   if (!from) throw new Error('FROM_EMAIL_ADDRESS is not set.');
   const mailOptions = { from, to, replyTo, subject, html };
-  const info = await transporter.sendMail(mailOptions);
-  return info;
+
+  try {
+    // verify connection configuration (this helps surface auth/connect errors earlier)
+    await transporter.verify();
+  } catch (vErr) {
+    console.error('SMTP verify failed:', vErr && vErr.message ? vErr.message : vErr);
+    throw new Error('SMTP configuration verification failed. Check SMTP host, port, username and password.');
+  }
+
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    console.log('Email sent:', { messageId: info && info.messageId });
+    return info;
+  } catch (sendErr) {
+    // Log error without exposing credentials
+    console.error('sendMail failed:', sendErr && sendErr.message ? sendErr.message : sendErr);
+    throw new Error('Failed to send email. ' + (sendErr && sendErr.message ? sendErr.message : 'Unknown SMTP error'));
+  }
 }
 
 function generateOrderEmailHtml(input) {
