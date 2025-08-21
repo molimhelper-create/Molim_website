@@ -30,7 +30,13 @@ async function sendEmail({ to, from, replyTo, subject, html }) {
   const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
     port: parseInt(process.env.SMTP_PORT, 10),
-    secure: process.env.SMTP_SECURE === 'true',
+    // Support SMTP_SECURE values: 'true'/'false' or 'TLS'/'STARTTLS'.
+    // For Gmail with port 587 use TLS/STARTTLS (secure=false, requireTLS=true).
+    secure: (process.env.SMTP_SECURE === 'true'),
+    requireTLS: (function() {
+      const s = (process.env.SMTP_SECURE || '').toLowerCase();
+      return s === 'tls' || s === 'starttls';
+    })(),
     auth: { user: process.env.SMTP_USERNAME, pass: process.env.SMTP_PASSWORD }
   });
 
