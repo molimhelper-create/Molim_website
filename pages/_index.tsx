@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { Button } from "../components/Button";
 import { Section } from "../components/Section";
 import { Card } from "../components/Card";
-import { Award, Target, Zap, ShieldCheck, HeartPulse, Users } from "lucide-react";
+import { Award, Target, Zap, ShieldCheck, HeartPulse, Users, ShoppingCart } from "lucide-react";
 import styles from "./_index.module.css";
 
 const HomePage: React.FC = () => {
@@ -126,7 +126,9 @@ const HomePage: React.FC = () => {
             </div>
             <div className={styles.orderCtaWrap}>
               <Link to="/product" className={styles.orderCta} aria-label="اطلب الآن">
-                <span className={styles.orderCtaIcon} aria-hidden>+</span>
+                <span className={styles.orderCtaIcon} aria-hidden>
+                  <ShoppingCart size={16} />
+                </span>
                 <span className={styles.orderCtaText}>اطلب الآن</span>
               </Link>
             </div>
