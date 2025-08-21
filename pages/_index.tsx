@@ -133,6 +133,7 @@ const HomePage: React.FC = () => {
 
         {/* Why Choose Us Section */}
         <Section variant="light">
+          <h2 className={styles.sectionTitle}>لماذا تختارنا؟</h2>
           <div className={styles.featuresGrid}>
             {features.map((feature, index) => (
               <Card key={index} className={styles.featureCard}>
