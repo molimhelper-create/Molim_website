@@ -228,6 +228,13 @@ const ShoppingSection: React.FC = () => {
               {/* itemIds can be repeated inputs; Netlify will capture multiple values */}
               <input type="text" name="itemIds" />
             </form>
+
+            {/* noscript fallback: link to the static HTML form when JS is disabled */}
+            <noscript>
+              <div style={{ textAlign: 'center', marginTop: '1rem' }}>
+                <a href="/send-order.html">اضغط هنا لفتح نموذج الطلب (بدون جافاسكربت)</a>
+              </div>
+            </noscript>
           </div>
         </div>
       )}
