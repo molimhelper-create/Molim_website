@@ -25,7 +25,7 @@ const formatCurrency = (amount) => new Intl.NumberFormat('en-US', { style: 'curr
 async function sendEmail({ to, from, replyTo, subject, html }) {
   const requiredEnvVars = ['SMTP_HOST','SMTP_PORT','SMTP_USERNAME','SMTP_PASSWORD','FROM_EMAIL_ADDRESS'];
   const missing = requiredEnvVars.filter(k => !process.env[k]);
-  if (missing.length) throw new Error('Missing required environment variables: ' + missing.join(', '));
+  if (missing.length) throw new Error('Missing required environment variables: ' + missing.join(', ') + '. Please set them in Netlify site settings or env.json for local dev.');
 
   const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
@@ -34,7 +34,9 @@ async function sendEmail({ to, from, replyTo, subject, html }) {
     auth: { user: process.env.SMTP_USERNAME, pass: process.env.SMTP_PASSWORD }
   });
 
-  const info = await transporter.sendMail({ from, to, replyTo, subject, html });
+  if (!from) throw new Error('FROM_EMAIL_ADDRESS is not set.');
+  const mailOptions = { from, to, replyTo, subject, html };
+  const info = await transporter.sendMail(mailOptions);
   return info;
 }
 

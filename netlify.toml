@@ -8,3 +8,9 @@
  
 [build.environment]
   NODE_VERSION = "18"
+
+[[redirects]]
+  from = "/_api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+  force = true
