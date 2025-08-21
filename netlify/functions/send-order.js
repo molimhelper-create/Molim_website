@@ -1,5 +1,4 @@
 const superjson = require('superjson');
-const nodemailer = require('nodemailer');
 
 // Minimal product and price logic copied from helpers/priceCalculations
 const TAX_RATE = 0.15;
@@ -23,41 +22,40 @@ const calculateTax = (subtotal) => subtotal * TAX_RATE;
 const formatCurrency = (amount) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'SAR' }).format(amount);
 
 async function sendEmail({ to, from, replyTo, subject, html }) {
-  const requiredEnvVars = ['SMTP_HOST','SMTP_PORT','SMTP_USERNAME','SMTP_PASSWORD','FROM_EMAIL_ADDRESS'];
-  const missing = requiredEnvVars.filter(k => !process.env[k]);
-  if (missing.length) throw new Error('Missing required environment variables: ' + missing.join(', ') + '. Please set them in Netlify site settings or env.json for local dev.');
+  // Send via SendGrid HTTP API (Netlify blocks SMTP ports)
+  const apiKey = process.env.SENDGRID_API_KEY;
+  const sendgridFrom = process.env.SENDGRID_FROM_EMAIL || from;
+  if (!apiKey) throw new Error('SENDGRID_API_KEY is not set. Please add it to Netlify environment variables.');
+  if (!sendgridFrom) throw new Error('FROM email is not set. Please set SENDGRID_FROM_EMAIL or FROM_EMAIL_ADDRESS.');
 
-  const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: parseInt(process.env.SMTP_PORT, 10),
-    // Support SMTP_SECURE values: 'true'/'false' or 'TLS'/'STARTTLS'.
-    // For Gmail with port 587 use TLS/STARTTLS (secure=false, requireTLS=true).
-    secure: (process.env.SMTP_SECURE === 'true'),
-    requireTLS: (function() {
-      const s = (process.env.SMTP_SECURE || '').toLowerCase();
-      return s === 'tls' || s === 'starttls';
-    })(),
-    auth: { user: process.env.SMTP_USERNAME, pass: process.env.SMTP_PASSWORD }
-  });
-  if (!from) throw new Error('FROM_EMAIL_ADDRESS is not set.');
-  const mailOptions = { from, to, replyTo, subject, html };
+  const payload = {
+    personalizations: [{ to: [{ email: to }], subject }],
+    from: { email: sendgridFrom },
+    content: [{ type: 'text/html', value: html }]
+  };
+  if (replyTo) payload.reply_to = { email: replyTo };
 
   try {
-    // verify connection configuration (this helps surface auth/connect errors earlier)
-    await transporter.verify();
-  } catch (vErr) {
-    console.error('SMTP verify failed:', vErr && vErr.message ? vErr.message : vErr);
-    throw new Error('SMTP configuration verification failed. Check SMTP host, port, username and password.');
-  }
+    const res = await fetch('https://api.sendgrid.com/v3/mail/send', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    });
 
-  try {
-    const info = await transporter.sendMail(mailOptions);
-    console.log('Email sent:', { messageId: info && info.messageId });
-    return info;
-  } catch (sendErr) {
-    // Log error without exposing credentials
-    console.error('sendMail failed:', sendErr && sendErr.message ? sendErr.message : sendErr);
-    throw new Error('Failed to send email. ' + (sendErr && sendErr.message ? sendErr.message : 'Unknown SMTP error'));
+    if (!res.ok) {
+      const text = await res.text();
+      console.error('SendGrid error', res.status, text);
+      throw new Error(`SendGrid error ${res.status}: ${text.slice(0, 500)}`);
+    }
+
+    console.log('SendGrid accepted message');
+    return { messageId: 'sendgrid' };
+  } catch (err) {
+    console.error('SendGrid send failed:', err && err.message ? err.message : err);
+    throw new Error('Failed to send email via SendGrid: ' + (err && err.message ? err.message : 'Unknown error'));
   }
 }
 
