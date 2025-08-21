@@ -14,58 +14,14 @@ import {
 import { Download, Info, ShoppingCart, Mail, CheckCircle } from "lucide-react";
 import { useCart } from "../helpers/useCart";
 import { BASE_DEVICE, ADDONS, formatCurrency } from "../helpers/priceCalculations";
-import { useMutation } from "@tanstack/react-query";
-import { postSendOrder } from "../endpoints/send-order_POST.schema";
+// Using Netlify Forms for submissions (no SMTP). Client-side mutation removed.
 import styles from "./product.module.css";
 
 const ShoppingSection: React.FC = () => {
   const { items, addItem, removeItem, isInCart, subtotal, tax, shipping, total, itemCount, clearCart } = useCart();
   const [customerEmail, setCustomerEmail] = useState("");
 
-  const orderMutation = useMutation({
-    mutationFn: postSendOrder,
-    onSuccess: () => {
-      alert("تم إرسال طلبك بنجاح! سنتواصل معك قريباً.");
-      setCustomerEmail("");
-      clearCart();
-    },
-    onError: (error) => {
-      alert(`حدث خطأ: ${error.message}`);
-    }
-  });
-
-  const handleSubmitOrder = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!customerEmail.trim()) {
-      alert("الرجاء إدخال البريد الإلكتروني");
-      return;
-    }
-    if (items.length === 0) {
-      alert("عربة التسوق فارغة");
-      return;
-    }
-    
-    const itemIds = items.map(item => item.id);
-    // Submit to Netlify Forms as a fallback (best-effort) so Netlify can
-    // capture submissions and send notifications without SMTP.
-    try {
-      const formData = new FormData();
-      formData.append('form-name', 'send-order');
-      formData.append('customerEmail', customerEmail);
-      // append itemIds as multiple values to match server schema
-      itemIds.forEach(id => formData.append('itemIds', id));
-      // Fire-and-forget; Netlify will record this POST as a form submission.
-      fetch('/', { method: 'POST', body: formData }).then(res => {
-        console.log('Netlify Forms fallback submission status', res.status);
-      }).catch(err => {
-        console.warn('Netlify Forms fallback failed', err && err.message ? err.message : err);
-      });
-    } catch (err) {
-      console.warn('Failed to run Netlify Forms fallback', err && (err as Error).message);
-    }
-
-    orderMutation.mutate({ customerEmail, itemIds });
-  };
+  // Submissions handled by Netlify Forms via native HTML form below.
 
   return (
         <Section variant="light" className={styles.shoppingSection}>
@@ -198,10 +154,23 @@ const ShoppingSection: React.FC = () => {
               <span>هذا طلب مسبق - سنتواصل معك لتأكيد التفاصيل</span>
             </div>
 
-            <form onSubmit={handleSubmitOrder} className={styles.orderForm}>
+            {/* Netlify native form - no SMTP, no server-side email required */}
+            <form
+              name="send-order"
+              method="POST"
+              data-netlify="true"
+              netlify-honeypot="bot-field"
+              className={styles.orderForm}
+            >
+              <input type="hidden" name="form-name" value="send-order" />
+              <p style={{ display: 'none' }}>
+                <label>لا تعبئ هذا الحقل<input name="bot-field" /></label>
+              </p>
+
               <div className={styles.emailInputContainer}>
                 <Mail size={16} className={styles.emailIcon} />
                 <Input
+                  name="customerEmail"
                   type="email"
                   placeholder="البريد الإلكتروني"
                   value={customerEmail}
@@ -210,13 +179,19 @@ const ShoppingSection: React.FC = () => {
                   className={styles.emailInput}
                 />
               </div>
-              <Button 
-                type="submit" 
+
+              {/* Render hidden inputs for each item in the cart so Netlify captures them */}
+              {items.map((it) => (
+                <input key={it.id} type="hidden" name="itemIds" value={it.id} />
+              ))}
+
+              <Button
+                type="submit"
                 size="lg"
-                disabled={orderMutation.isPending}
+                disabled={!customerEmail.trim() || items.length === 0}
                 className={styles.submitButton}
               >
-                {orderMutation.isPending ? "جار الإرسال..." : "إتمام الطلب"}
+                إتمام الطلب
               </Button>
             </form>
 
