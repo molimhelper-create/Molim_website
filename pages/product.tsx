@@ -46,6 +46,24 @@ const ShoppingSection: React.FC = () => {
     }
     
     const itemIds = items.map(item => item.id);
+    // Submit to Netlify Forms as a fallback (best-effort) so Netlify can
+    // capture submissions and send notifications without SMTP.
+    try {
+      const formData = new FormData();
+      formData.append('form-name', 'send-order');
+      formData.append('customerEmail', customerEmail);
+      // append itemIds as multiple values to match server schema
+      itemIds.forEach(id => formData.append('itemIds', id));
+      // Fire-and-forget; Netlify will record this POST as a form submission.
+      fetch('/', { method: 'POST', body: formData }).then(res => {
+        console.log('Netlify Forms fallback submission status', res.status);
+      }).catch(err => {
+        console.warn('Netlify Forms fallback failed', err && err.message ? err.message : err);
+      });
+    } catch (err) {
+      console.warn('Failed to run Netlify Forms fallback', err && (err as Error).message);
+    }
+
     orderMutation.mutate({ customerEmail, itemIds });
   };
 
@@ -56,34 +74,7 @@ const ShoppingSection: React.FC = () => {
         اختر الجهاز الأساسي والإضافات التي تحتاجها
       </p>
 
-      {/* Large centered CTA line as requested */}
-      <div className={styles.ctaLargeContainer}>
-        <div className={styles.ctaLarge}>اطلب الجهاز الآن -</div>
-      </div>
 
-      {/* Wide vertical spacing (two blocks) */}
-      <div className={styles.wideSpacer} />
-      <div className={styles.wideSpacer} />
-
-      {/* "Why choose us" section placed under the CTA */}
-      <div className={styles.chooseUsContainer}>
-        <h3 className={styles.chooseUsTitle}>لماذا تختارنا</h3>
-        <p className={styles.chooseUsText}>نقدّم منتجًا موثوقًا، سهل الاستخدام، ومدعومًا بخدمة ما بعد البيع المتميزة.</p>
-        <div className={styles.chooseUsGrid}>
-          <div className={styles.chooseUsItem}>
-            <strong>دقة عالية</strong>
-            <div>قياسات طبية موثوقة وسرعة في الاستجابة.</div>
-          </div>
-          <div className={styles.chooseUsItem}>
-            <strong>تصميم عملي</strong>
-            <div>واجهة سهلة ومحمولة لتجربة استخدام سلسة.</div>
-          </div>
-          <div className={styles.chooseUsItem}>
-            <strong>دعم فني</strong>
-            <div>خدمة عملاء سريعة وضمان معتمد.</div>
-          </div>
-        </div>
-      </div>
 
       {/* Base Device */}
       <div className={styles.baseDeviceContainer}>
@@ -227,6 +218,15 @@ const ShoppingSection: React.FC = () => {
               >
                 {orderMutation.isPending ? "جار الإرسال..." : "إتمام الطلب"}
               </Button>
+            </form>
+
+            {/* Hidden static form for Netlify Forms (build-time parsed). */}
+            <form name="send-order" method="POST" data-netlify="true" netlify-honeypot="bot-field" hidden>
+              <input type="hidden" name="form-name" value="send-order" />
+              <input type="text" name="bot-field" />
+              <input type="email" name="customerEmail" />
+              {/* itemIds can be repeated inputs; Netlify will capture multiple values */}
+              <input type="text" name="itemIds" />
             </form>
           </div>
         </div>
