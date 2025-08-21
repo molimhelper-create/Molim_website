@@ -105,24 +105,62 @@ function generateOrderEmailHtml(input) {
     </html>`;
 }
 
+const fs = require('fs');
+const path = require('path');
+
+function saveOrderLocally(payload) {
+  try {
+    const saveEnabled = process.env.SAVE_ORDERS === 'true' || process.env.NODE_ENV !== 'production';
+    if (!saveEnabled) return;
+    const dir = path.resolve(__dirname, '..', '..', 'orders');
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    const file = path.join(dir, 'orders.log');
+    const entry = { ts: new Date().toISOString(), payload };
+    fs.appendFileSync(file, JSON.stringify(entry) + '\n');
+  } catch (e) {
+    console.error('Failed to save order locally:', e && e.message ? e.message : e);
+  }
+}
+
 exports.handler = async function(event, context) {
   try {
+    console.log('send-order function invoked');
+    console.log('event.body length:', event.body ? event.body.length : 0);
+
     const json = superjson.parse(event.body || '{}');
 
     // Basic validation: ensure itemIds and customerEmail exist
     if (!json.itemIds || !Array.isArray(json.itemIds) || !json.customerEmail) {
+      console.warn('Invalid input received by send-order function', { body: event.body });
+      saveOrderLocally({ type: 'invalid', body: json });
       return { statusCode: 400, body: superjson.stringify({ error: 'Invalid input' }) };
     }
+
+    // Save incoming order (dev fallback)
+    saveOrderLocally({ type: 'incoming', body: json });
 
     const emailHtml = generateOrderEmailHtml(json);
     const recipientEmail = process.env.ORDER_RECIPIENT_EMAIL || 'molim.helper@gmail.com';
     const senderEmail = process.env.FROM_EMAIL_ADDRESS;
 
-    await sendEmail({ to: recipientEmail, from: senderEmail, replyTo: json.customerEmail, subject: `طلب شراء مسبق جديد من ${json.customerEmail}`, html: emailHtml });
+    try {
+      await sendEmail({ to: recipientEmail, from: senderEmail, replyTo: json.customerEmail, subject: `طلب شراء مسبق جديد من ${json.customerEmail}`, html: emailHtml });
+    } catch (sendErr) {
+      console.error('Email send failed inside function:', sendErr && sendErr.message ? sendErr.message : sendErr);
+      // Save failed email attempt
+      saveOrderLocally({ type: 'email-failed', body: json, error: sendErr && sendErr.message ? sendErr.message : String(sendErr) });
+      // Return a 502 to indicate upstream gateway issue while keeping JSON body
+      return { statusCode: 502, body: superjson.stringify({ error: 'Failed to send email notification', details: sendErr && sendErr.message ? sendErr.message : String(sendErr) }) };
+    }
+
+    // On success, persist record too (optional)
+    saveOrderLocally({ type: 'sent', body: json });
 
     return { statusCode: 200, body: superjson.stringify({ success: true, message: 'تم إرسال طلبك بنجاح.' }) };
   } catch (err) {
-    console.error('Function error:', err);
+    console.error('Function error:', err && err.message ? err.message : err);
+    // Save full failure for diagnosis
+    try { saveOrderLocally({ type: 'exception', error: err && err.message ? err.message : String(err), rawBody: event.body }); } catch (_) {}
     return { statusCode: 500, body: superjson.stringify({ error: err instanceof Error ? err.message : 'Unknown error' }) };
   }
 };
