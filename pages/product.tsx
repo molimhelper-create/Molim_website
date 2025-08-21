@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import * as React from "react";
+import { useState } from "react";
 import { Helmet } from "react-helmet";
 import { Section } from "../components/Section";
 import { Button } from "../components/Button";
@@ -54,6 +55,35 @@ const ShoppingSection: React.FC = () => {
       <p className={styles.shoppingSectionSubtitle}>
         اختر الجهاز الأساسي والإضافات التي تحتاجها
       </p>
+
+      {/* Large centered CTA line as requested */}
+      <div className={styles.ctaLargeContainer}>
+        <div className={styles.ctaLarge}>اطلب الجهاز الآن -</div>
+      </div>
+
+      {/* Wide vertical spacing (two blocks) */}
+      <div className={styles.wideSpacer} />
+      <div className={styles.wideSpacer} />
+
+      {/* "Why choose us" section placed under the CTA */}
+      <div className={styles.chooseUsContainer}>
+        <h3 className={styles.chooseUsTitle}>لماذا تختارنا</h3>
+        <p className={styles.chooseUsText}>نقدّم منتجًا موثوقًا، سهل الاستخدام، ومدعومًا بخدمة ما بعد البيع المتميزة.</p>
+        <div className={styles.chooseUsGrid}>
+          <div className={styles.chooseUsItem}>
+            <strong>دقة عالية</strong>
+            <div>قياسات طبية موثوقة وسرعة في الاستجابة.</div>
+          </div>
+          <div className={styles.chooseUsItem}>
+            <strong>تصميم عملي</strong>
+            <div>واجهة سهلة ومحمولة لتجربة استخدام سلسة.</div>
+          </div>
+          <div className={styles.chooseUsItem}>
+            <strong>دعم فني</strong>
+            <div>خدمة عملاء سريعة وضمان معتمد.</div>
+          </div>
+        </div>
+      </div>
 
       {/* Base Device */}
       <div className={styles.baseDeviceContainer}>
